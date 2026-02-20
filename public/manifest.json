@@ -1,0 +1,16 @@
+{
+  "name": "NixVet - Sistema Veterinário",
+  "short_name": "NixVet",
+  "description": "Sistema de gestão para clínicas veterinárias",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#13364F",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "any",
+      "type": "image/png"
+    }
+  ]
+}
