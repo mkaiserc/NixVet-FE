@@ -2,16 +2,29 @@
 
 import React from 'react';
 import { Form, Input, Button, Card, message, Divider } from 'antd';
-import { SettingOutlined, SaveOutlined, SearchOutlined } from '@ant-design/icons';
+import { SettingOutlined, SaveOutlined, SearchOutlined, PlusOutlined } from '@ant-design/icons';
 import api from '@/lib/axios';
 import axios from 'axios';
 import { MaskedInput } from 'antd-mask-input';
 
+function getCurrentUserRole(): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem('user');
+    const user = raw ? JSON.parse(raw) : null;
+    return user?.role ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export default function SettingsPage() {
   const [form] = Form.useForm();
-
+  const [formNewTenant] = Form.useForm();
   const [loading, setLoading] = React.useState(false);
   const [loadingCep, setLoadingCep] = React.useState(false);
+  const [creatingTenant, setCreatingTenant] = React.useState(false);
+  const isAdmin = getCurrentUserRole() === 'admin';
 
   React.useEffect(() => {
     fetchSettings();
@@ -137,6 +150,45 @@ export default function SettingsPage() {
     }
   };
 
+  const onCreateTenant = async (values: {
+    name: string;
+    code: string;
+    initialUserName?: string;
+    initialUserEmail?: string;
+    initialUserPassword?: string;
+  }) => {
+    if (!values.name?.trim() || !values.code?.trim()) {
+      message.warning('Preencha nome e código');
+      return;
+    }
+    setCreatingTenant(true);
+    try {
+      const payload: { name: string; code: string; initialUser?: { name: string; email: string; password: string } } = {
+        name: values.name.trim(),
+        code: values.code.trim().toUpperCase(),
+      };
+      if (values.initialUserEmail?.trim() && values.initialUserPassword && values.initialUserName?.trim()) {
+        payload.initialUser = {
+          name: values.initialUserName.trim(),
+          email: values.initialUserEmail.trim(),
+          password: values.initialUserPassword,
+        };
+      }
+      await api.post('/tenants', payload);
+      message.success(
+        payload.initialUser
+          ? `Clínica "${values.name}" e usuário criados. Código: ${payload.code}`
+          : `Clínica "${values.name}" criada. Código para login: ${payload.code}`,
+      );
+      formNewTenant.resetFields();
+    } catch (e: any) {
+      const msg = e.response?.data?.message || 'Erro ao criar clínica';
+      message.error(msg);
+    } finally {
+      setCreatingTenant(false);
+    }
+  };
+
   return (
     <div>
       <h1 className="text-2xl font-bold text-blue-600 flex items-center gap-2 mb-6">
@@ -226,6 +278,37 @@ export default function SettingsPage() {
             </div>
           </div>
         </Card>
+
+        {isAdmin && (
+          <Card title="Nova clínica (para testes)" className="shadow-sm md:col-span-2">
+            <p className="text-gray-500 mb-4">
+              Crie uma clínica para usuários testarem. Informe o <strong>código</strong> na tela de login. Opcional: cadastre o primeiro usuário (admin) da clínica.
+            </p>
+            <Form form={formNewTenant} layout="vertical" onFinish={onCreateTenant} className="max-w-md">
+              <Form.Item name="name" label="Nome da clínica" rules={[{ required: true, message: 'Obrigatório' }]}>
+                <Input placeholder="Ex: Clínica Teste" />
+              </Form.Item>
+              <Form.Item name="code" label="Código (usado no login)" rules={[{ required: true, message: 'Obrigatório' }]}>
+                <Input placeholder="Ex: TESTE" />
+              </Form.Item>
+              <Divider plain>Primeiro usuário (opcional)</Divider>
+              <Form.Item name="initialUserName" label="Nome do usuário">
+                <Input placeholder="Ex: Admin Teste" />
+              </Form.Item>
+              <Form.Item name="initialUserEmail" label="Email">
+                <Input type="email" placeholder="Ex: admin@teste.com" />
+              </Form.Item>
+              <Form.Item name="initialUserPassword" label="Senha">
+                <Input.Password placeholder="Senha de acesso" />
+              </Form.Item>
+              <Form.Item>
+                <Button type="primary" htmlType="submit" icon={<PlusOutlined />} loading={creatingTenant} className="bg-blue-600">
+                  Criar clínica
+                </Button>
+              </Form.Item>
+            </Form>
+          </Card>
+        )}
       </div>
     </div>
   );
