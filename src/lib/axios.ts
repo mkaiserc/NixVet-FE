@@ -1,7 +1,11 @@
 import axios from 'axios';
 
 const rawBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
-const baseURL = rawBase.endsWith('/api') ? rawBase : `${rawBase.replace(/\/?$/, '')}/api`;
+let baseURL = rawBase.endsWith('/api') ? rawBase : `${rawBase.replace(/\/?$/, '')}/api`;
+// Evitar mixed-content: se a página está em HTTPS, forçar API em HTTPS
+if (typeof window !== 'undefined' && window.location.protocol === 'https:' && baseURL.startsWith('http://')) {
+  baseURL = baseURL.replace(/^http:\/\//, 'https://');
+}
 
 const api = axios.create({
   baseURL,
