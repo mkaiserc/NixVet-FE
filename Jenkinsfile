@@ -36,7 +36,17 @@ pipeline {
             steps {
                 script {
                     def branchName = scm.branches[0].name.replace('*/', '')
-                    def envPrefix = (branchName == 'main') ? 'NixVet_FE_ENV_PRD' : 'NixVet_FE_ENV_HML'
+                    echo "Branch detectada: ${branchName}"
+                    // main → Homologação (HML) | producao → Produção (PRD)
+                    def envPrefix = ''
+                    if (branchName == 'main') {
+                        envPrefix = 'NixVet_FE_ENV_HML'
+                    } else if (branchName == 'producao') {
+                        envPrefix = 'NixVet_FE_ENV_PRD'
+                    } else {
+                        error "Branch '${branchName}' não mapeada. Use 'main' (HML) ou 'producao' (PRD)."
+                    }
+                    echo "Secret: ${envPrefix}"
                     
                     loadEnvironmentVariables(envPrefix) { envVars ->
                         def deployIp = envVars['SERVER_DEPLOY_IP']
