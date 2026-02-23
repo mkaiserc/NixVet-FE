@@ -106,13 +106,16 @@ export default function OwnersPage() {
 
   const handleSubmit = async (values: any) => {
     try {
-      // Combine address fields into a single string for backend compatibility
-      // Format: "Logradouro, Numero - Complemento - Bairro - Cidade/UF"
+      // Monta o endereço completo; envia só os campos aceitos pelo backend (evita 400 se a API for antiga)
       const fullAddress = `${values.street}, ${values.number}${values.complement ? ` - ${values.complement}` : ''} - ${values.neighborhood} - ${values.city}/${values.state}`;
-      
       const payload = {
-        ...values,
-        address: fullAddress
+        name: values.name,
+        cpf: values.cpf,
+        email: values.email,
+        cep: values.cep,
+        phone: values.phone,
+        address: fullAddress,
+        consent_given: values.consent_given,
       };
 
       if (editingId) {
@@ -244,10 +247,10 @@ export default function OwnersPage() {
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold text-[#13364F] flex items-center gap-2">
+        <h1 className="text-2xl font-bold text-blue-600 flex items-center gap-2">
           <TeamOutlined /> Tutores
         </h1>
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd} className="bg-[#13364F]">
+        <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd} className="bg-blue-600">
           Novo Tutor
         </Button>
       </div>
@@ -300,7 +303,7 @@ export default function OwnersPage() {
                        icon={loadingCep ? <SearchOutlined spin /> : <SearchOutlined />} 
                        onClick={handleCepSearch}
                        disabled={loadingCep}
-                       className="bg-[#13364F]"
+                       className="bg-blue-600"
                      />
                   </div>
                 </Form.Item>

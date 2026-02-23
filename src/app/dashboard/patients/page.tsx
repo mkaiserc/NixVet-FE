@@ -23,9 +23,17 @@ interface Patient {
   tutor?: Tutor;
 }
 
+interface SupportOption {
+  id: number;
+  description: string;
+}
+
 export default function PatientsPage() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [tutors, setTutors] = useState<Tutor[]>([]);
+  const [speciesOptions, setSpeciesOptions] = useState<SupportOption[]>([]);
+  const [breedOptions, setBreedOptions] = useState<SupportOption[]>([]);
+  const [sexOptions, setSexOptions] = useState<SupportOption[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -53,9 +61,45 @@ export default function PatientsPage() {
     }
   };
 
+  const BREED_DISCRIMINATOR: Record<string, string> = {
+    CANINO: 'ANIMAL_RACA_CAO',
+    FELINO: 'ANIMAL_RACA_GATO',
+    BOVINO: 'ANIMAL_RACA_BOVINO',
+    EQUINO: 'ANIMAL_RACA_EQUINO',
+  };
+
+  const fetchSupportOptions = async () => {
+    try {
+      const [species, sex] = await Promise.all([
+        api.get<SupportOption[]>('/catalog/support', { params: { discriminator: 'ANIMAL_ESPECIE' } }),
+        api.get<SupportOption[]>('/catalog/support', { params: { discriminator: 'ANIMAL_GENERO' } }),
+      ]);
+      setSpeciesOptions(species.data ?? []);
+      setSexOptions(sex.data ?? []);
+    } catch (error) {
+      console.error('Error fetching support options:', error);
+    }
+  };
+
+  const fetchBreedOptions = async (species: string) => {
+    const disc = BREED_DISCRIMINATOR[species];
+    if (!disc) {
+      setBreedOptions([]);
+      return;
+    }
+    try {
+      const res = await api.get<SupportOption[]>('/catalog/support', { params: { discriminator: disc } });
+      setBreedOptions(res.data ?? []);
+    } catch (error) {
+      console.error('Error fetching breed options:', error);
+      setBreedOptions([]);
+    }
+  };
+
   useEffect(() => {
     fetchPatients();
     fetchTutors();
+    fetchSupportOptions();
   }, []);
 
   const handleAdd = () => {
@@ -67,6 +111,7 @@ export default function PatientsPage() {
   const handleEdit = (record: Patient) => {
     setEditingId(record.id);
     form.setFieldsValue(record);
+    fetchBreedOptions(record.species);
     setModalVisible(true);
   };
 
@@ -136,10 +181,10 @@ export default function PatientsPage() {
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold text-[#13364F] flex items-center gap-2">
+        <h1 className="text-2xl font-bold text-blue-600 flex items-center gap-2">
           <MedicineBoxOutlined /> Pacientes
         </h1>
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd} className="bg-[#13364F]">
+        <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd} className="bg-blue-600">
           Novo Paciente
         </Button>
       </div>
@@ -173,14 +218,26 @@ export default function PatientsPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <Form.Item name="species" label="Espécie" rules={[{ required: true, message: 'Obrigatório' }]}>
-              <Select>
-                <Select.Option value="Cão">Cão</Select.Option>
-                <Select.Option value="Gato">Gato</Select.Option>
-                <Select.Option value="Outro">Outro</Select.Option>
-              </Select>
+              <Select
+                placeholder="Selecione"
+                showSearch
+                filterOption={(input, option) => (option?.label ?? '').toLowerCase().includes(input.toLowerCase())}
+                options={speciesOptions.map((o) => ({ value: o.description, label: o.description }))}
+                onChange={(value) => {
+                  form.setFieldValue('breed', undefined);
+                  fetchBreedOptions(value);
+                }}
+              />
             </Form.Item>
             <Form.Item name="breed" label="Raça" rules={[{ required: true, message: 'Obrigatório' }]}>
-              <Input />
+              <Select
+                placeholder={breedOptions.length ? 'Selecione a raça' : 'Selecione primeiro a espécie'}
+                showSearch
+                filterOption={(input, option) => (option?.label ?? '').toLowerCase().includes(input.toLowerCase())}
+                options={breedOptions.map((o) => ({ value: o.description, label: o.description }))}
+                allowClear
+                disabled={!breedOptions.length}
+              />
             </Form.Item>
           </div>
 
@@ -192,12 +249,13 @@ export default function PatientsPage() {
               <InputNumber min={0} step={0.1} className="w-full" />
             </Form.Item>
             <Form.Item name="sex" label="Sexo" rules={[{ required: true, message: 'Obrigatório' }]}>
-              <Select>
-                <Select.Option value="M">Macho</Select.Option>
-                <Select.Option value="F">Fêmea</Select.Option>
-              </Select>
+              <Select
+                placeholder="Selecione"
+                options={sexOptions.map((o) => ({ value: o.description, label: o.description }))}
+              />
             </Form.Item>
           </div>
+
 
           <Form.Item name="chip_number" label="Nº Microchip">
             <Input />

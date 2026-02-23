@@ -131,10 +131,10 @@ export default function TeamPage() {
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold text-[#13364F] flex items-center gap-2">
+        <h1 className="text-2xl font-bold text-blue-600 flex items-center gap-2">
           <UserOutlined /> Equipe Veterinária
         </h1>
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd} className="bg-[#13364F]">
+        <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd} className="bg-blue-600">
           Novo Veterinário
         </Button>
       </div>

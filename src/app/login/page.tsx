@@ -49,7 +49,7 @@ export default function LoginPage() {
           <div className="flex justify-center mb-4">
             <Logo width={80} height={80} />
           </div>
-          <Title level={2} className="!text-[#13364F] !mb-2">
+          <Title level={2} className="!text-blue-600 !mb-2">
             NixVetApp
           </Title>
           <Text className="text-gray-500 text-lg">
@@ -108,7 +108,7 @@ export default function LoginPage() {
                 <Button 
                   type="primary" 
                   htmlType="submit" 
-                  className="w-full h-12 text-lg font-medium bg-[#13364F] hover:bg-[#1a4a6b] rounded-lg border-none shadow-md hover:shadow-lg transition-all"
+                  className="w-full h-12 text-lg font-medium bg-blue-600 hover:bg-blue-700 rounded-lg border-none shadow-md hover:shadow-lg transition-all"
                   loading={loading}
                 >
                   Entrar no Sistema
@@ -116,7 +116,7 @@ export default function LoginPage() {
               </Form.Item>
 
               <div className="text-center mt-4">
-                <a href="#" className="text-[#13364F] hover:text-[#C29A5A] text-sm font-medium transition-colors">
+                <a href="#" className="text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors">
                   Esqueceu sua senha?
                 </a>
               </div>
